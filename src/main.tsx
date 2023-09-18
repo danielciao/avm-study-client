@@ -1,11 +1,16 @@
-import 'leaflet/dist/leaflet.css'
-import React from 'react'
-import ReactDOM from 'react-dom/client'
-import { App } from './App.tsx'
-import './index.css'
+import { ChakraProvider, ColorModeScript } from '@chakra-ui/react';
+import 'leaflet/dist/leaflet.css';
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import { App } from './App.tsx';
+import './index.css';
+import theme from './theme';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
-    <App />
+    <ChakraProvider theme={theme}>
+      <ColorModeScript initialColorMode="light" />
+      <App />
+    </ChakraProvider>
   </React.StrictMode>,
-)
+);
