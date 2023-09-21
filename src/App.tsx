@@ -14,7 +14,6 @@ import {
   Skeleton,
   Stack,
   Text,
-  useColorMode,
   useColorModeValue,
   useDisclosure,
   useMediaQuery,
@@ -107,18 +106,17 @@ export const App = () => {
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [isLargerThan768] = useMediaQuery('(min-width: 768px)');
 
-  const { colorMode, toggleColorMode } = useColorMode();
-
   const [location, setLocation] = useState<LatLngLiteral | null>(null);
+  const [selectedItem, setSelectedItem] = useState<EPCItem | null>(null);
 
-  const tileAttribution =
-    colorMode === 'dark'
-      ? '&copy; <a href="https://www.mapbox.com/">Mapbox</a>'
-      : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
-  const tileUrl =
-    colorMode === 'dark'
-      ? `https://api.mapbox.com/styles/v1/${VITE_MAPBOX_USERNAME}/${VITE_MAPBOX_STYLE_ID}/tiles/256/{z}/{x}/{y}@2x?access_token=${VITE_MAPBOX_ACCESS_TOKEN}`
-      : 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png';
+  const tileAttribution = useColorModeValue(
+    'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    '&copy; <a href="https://www.mapbox.com/">Mapbox</a>',
+  );
+  const tileUrl = useColorModeValue(
+    'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
+    `https://api.mapbox.com/styles/v1/${VITE_MAPBOX_USERNAME}/${VITE_MAPBOX_STYLE_ID}/tiles/256/{z}/{x}/{y}@2x?access_token=${VITE_MAPBOX_ACCESS_TOKEN}`,
+  );
 
   const { data: epcItems, isLoading: isEpcLoading } = useFetch<Array<EPCItem>>(
     location
@@ -127,7 +125,6 @@ export const App = () => {
     [location],
   );
 
-  const [selectedItem, setSelectedItem] = useState<EPCItem | null>(null);
   const { data: attributes, isLoading: _isAttributeLoading } = useFetch<
     Array<AreaAttribute>
   >(
@@ -277,25 +274,25 @@ export const App = () => {
                   >
                     {isEpcLoading
                       ? Array.from({ length: 3 }).map((_, index) => (
-                        <Skeleton
-                          key={index}
-                          height="40px"
-                          isLoaded={isEpcLoading}
-                          flexShrink="0"
-                        >
-                          <Box>Loading...</Box>
-                        </Skeleton>
-                      ))
+                          <Skeleton
+                            key={index}
+                            height="40px"
+                            isLoaded={isEpcLoading}
+                            flexShrink="0"
+                          >
+                            <Box>Loading...</Box>
+                          </Skeleton>
+                        ))
                       : epcItems?.map((item) => (
-                        <ListItem
-                          key={item.EPC_UPRN}
-                          item={item}
-                          onClick={() => handleItemClick(item)}
-                          isSelected={
-                            item.EPC_UPRN === selectedItem?.EPC_UPRN
-                          }
-                        />
-                      ))}
+                          <ListItem
+                            key={item.EPC_UPRN}
+                            item={item}
+                            onClick={() => handleItemClick(item)}
+                            isSelected={
+                              item.EPC_UPRN === selectedItem?.EPC_UPRN
+                            }
+                          />
+                        ))}
                   </Stack>
                 </Card>
 
