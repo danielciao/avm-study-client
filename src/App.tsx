@@ -49,7 +49,7 @@ import { debounce } from './utils';
 
 const AnimatedCircleMarker = animated(CircleMarker);
 
-const { VITE_MAPBOX_USERNAME, VITE_MAPBOX_STYLE_ID, VITE_MAPBOX_ACCESS_TOKEN } =
+const { VITE_MAPBOX_USERNAME, VITE_MAPBOX_STYLE_ID, VITE_MAPBOX_ACCESS_TOKEN, VITE_API_BASE_URL } =
   import.meta.env;
 
 function LocationMarker(props: {
@@ -120,7 +120,7 @@ export const App = () => {
 
   const { data: epcItems, isLoading: isEpcLoading } = useFetch<Array<EPCItem>>(
     location
-      ? `http://localhost:3001/epc?lat=${location?.lat}&lon=${location?.lng}&top=10`
+      ? `${VITE_API_BASE_URL}/epc?lat=${location?.lat}&lon=${location?.lng}&top=10`
       : null,
     [location],
   );
@@ -129,7 +129,7 @@ export const App = () => {
     Array<AreaAttribute>
   >(
     selectedItem
-      ? `http://localhost:3001/features?lat=${selectedItem.UPRN_LATITUDE}&lon=${selectedItem.UPRN_LONGITUDE}&top=1`
+      ? `${VITE_API_BASE_URL}/features?lat=${selectedItem.UPRN_LATITUDE}&lon=${selectedItem.UPRN_LONGITUDE}&top=1`
       : null,
     [selectedItem],
   );
@@ -331,7 +331,7 @@ const Predict: React.FC<{ item: EPCItem }> = (props) => {
 
   const handleButtonClick = async () => {
     try {
-      const response = await fetch('http://localhost:3001/predict', {
+      const response = await fetch(`${VITE_API_BASE_URL}/predict`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
