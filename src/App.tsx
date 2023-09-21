@@ -1,34 +1,30 @@
 import {
   Box,
-  ChakraProvider,
+  Button,
   Divider,
   Drawer,
+  DrawerBody,
   DrawerCloseButton,
   DrawerContent,
   DrawerOverlay,
   Flex,
   Heading,
   IconButton,
+  Image,
   Skeleton,
   Stack,
-  Table,
-  Tbody,
-  Td,
   Text,
-  Th,
-  Thead,
-  Tr,
   useColorMode,
   useColorModeValue,
   useDisclosure,
   useMediaQuery,
 } from '@chakra-ui/react';
+import '@fontsource/open-sans/400.css';
 import '@fontsource/open-sans/700.css';
-import '@fontsource/raleway/400.css';
 import { LatLngLiteral } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { useEffect, useState } from 'react';
-import { FaCog, FaMoon, FaSun } from 'react-icons/fa';
+import { Fragment, useEffect, useState } from 'react';
+import { FaCog } from 'react-icons/fa';
 import {
   CircleMarker,
   MapContainer,
@@ -38,6 +34,15 @@ import {
   useMapEvents,
 } from 'react-leaflet';
 import { animated, useSpring } from 'react-spring';
+import touchscreen from './assets/cursor-touchscreen.png';
+import houses from './assets/houses.jpg';
+import { Card } from './components/Card';
+import { EPCCard } from './components/EPCCard';
+import { GreenSpaceAccessCard } from './components/GreenSpaceAccessCard';
+import { IMDCard } from './components/IMDCard';
+import { SchoolCard } from './components/SchoolCard';
+import { ThemeSwitcher } from './components/ThemeSwitcher';
+import { TransportCard } from './components/TransportCard';
 import { useCurrentLocation } from './hooks/useCurrentLocation';
 import { useFetch } from './hooks/useFetch';
 import { AreaAttribute, EPCItem } from './types';
@@ -147,7 +152,7 @@ export const App = () => {
   }, [epcItems]);
 
   return (
-    <ChakraProvider>
+    <>
       <Box pos="relative" h="100vh" zIndex={0}>
         <MapContainer
           center={location ?? currentPosition}
@@ -181,115 +186,153 @@ export const App = () => {
         size={isLargerThan768 ? 'sm' : 'full'}
       >
         <DrawerOverlay />
-        <DrawerContent overflowY="auto" display="flex" flexDirection="column">
+        <DrawerContent
+          overflowY="auto"
+          display="flex"
+          flexDirection="column"
+          background={useColorModeValue('gray.100', 'gray.700')}
+          backgroundImage={useColorModeValue(
+            'linear-gradient(rgba(250, 250, 250, 0.1), rgba(150, 150, 150, 0.5))',
+            'linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.2))',
+          )}
+        >
           <Flex
             justify="space-between"
             align="center"
-            p={4}
+            padding={4}
             position="sticky"
-            top="0"
             zIndex="sticky"
-            background="inherit"
+            top="0"
+            background={useColorModeValue('#EEF1F5', '#191B24')}
           >
-            <Heading size="md">iPredict</Heading>
-            <DrawerCloseButton position="relative" top={0} right={0} />
+            <Box as={'header'}>
+              <Heading
+                lineHeight={1.1}
+                fontSize={{ base: '2xl', sm: '3xl', lg: '4xl' }}
+              >
+                iPredict
+              </Heading>
+              <Text
+                color={useColorModeValue('gray.800', 'gray.400')}
+                fontWeight={300}
+                fontSize={'xl'}
+              >
+                London AVM Experiment
+              </Text>
+            </Box>
+            <DrawerCloseButton position="absolute" top={4} right={4} />
           </Flex>
-          <Divider />
+          <Divider borderColor={useColorModeValue('gray.400', 'gray.700')} />
           <Flex
             align="center"
             justify="flex-end"
-            paddingTop={2}
+            paddingBlock={1}
             paddingInline={4}
-            position="sticky"
-            top="16"
-            zIndex="sticky"
-            background="inherit"
+            boxShadow="0px 4px 10px rgba(0, 0, 0, 0.1)"
+            background="transparent"
           >
-            {colorMode === 'dark' ? (
-              <IconButton
-                aria-label="Switch to light mode"
-                icon={<FaSun />}
-                onClick={toggleColorMode}
-                variant="ghost"
-                color={useColorModeValue('gray.800', 'white')}
-                _focus={{ outline: 'none' }}
-                _hover={{ color: useColorModeValue('gray.600', 'gray.200') }}
-              />
-            ) : (
-              <IconButton
-                aria-label="Switch to dark mode"
-                icon={<FaMoon />}
-                onClick={toggleColorMode}
-                variant="ghost"
-                color={useColorModeValue('gray.800', 'white')}
-                _focus={{ outline: 'none' }}
-              />
-            )}
+            <ThemeSwitcher />
           </Flex>
-
-          <Text
-            fontSize={{ base: '16px', lg: '18px' }}
-            color={useColorModeValue('yellow.500', 'yellow.300')}
-            fontWeight={'500'}
-            textTransform={'uppercase'}
-            mb={'4'}
-          >
-            Features
-          </Text>
-          <Stack
-            spacing={1}
-            overflowY="auto"
-            maxHeight="40%"
-            minHeight="40%"
-            flex="1"
-            background={useColorModeValue('gray.50', 'gray.800')}
-            boxShadow="inset 0px 0px 10px rgba(0, 0, 0, 0.1)"
-          >
-            {isEpcLoading
-              ? Array.from({ length: 3 }).map((_, index) => (
-                <Skeleton
-                  key={index}
-                  height="40px"
-                  isLoaded={isEpcLoading}
-                  flexShrink="0"
+          <DrawerBody flex="1" padding={0} paddingBlockStart={4}>
+            {location == null ? (
+              <Card
+                image={
+                  <Image
+                    src={touchscreen}
+                    alt="Touch to select location"
+                    boxSize={116}
+                    paddingBlockStart={4}
+                    paddingInlineStart={4}
+                  />
+                }
+                title="Start with your location"
+                label="Welcome!"
+              >
+                <Text color="gray.500">
+                  Select a location on the map to view available addresses for
+                  prediction. <strong>Click</strong> to drop a pin.
+                  <strong>Left-click</strong> to remove the pin.
+                </Text>
+              </Card>
+            ) : (
+              <>
+                <Card
+                  image={
+                    <Image
+                      src={houses}
+                      alt="Image of London houses"
+                      width="100%"
+                    />
+                  }
+                  label="Select an address"
+                  paddingInline={3}
+                  paddingBlockEnd={3}
                 >
-                  <Box>Loading...</Box>
-                </Skeleton>
-              ))
-              : epcItems?.map((item) => (
-                <ListItem
-                  key={item.EPC_UPRN}
-                  item={item}
-                  onClick={() => handleItemClick(item)}
-                  isSelected={item.EPC_UPRN === selectedItem?.EPC_UPRN}
-                />
-              ))}
-          </Stack>
-          <Stack paddingBlock={2} paddingInline={4} spacing={1}>
-            {attributes && (
-              <Table variant="simple">
-                <Thead>
-                  <Tr>
-                    <Th>Label</Th>
-                    <Th>Value</Th>
-                  </Tr>
-                </Thead>
-                <Tbody>
-                  {Object.entries(attributes.at(0) ?? []).map(
-                    ([label, value]) => (
-                      <Tr key={label}>
-                        <Td>{label}</Td>
-                        <Td>{value}</Td>
-                      </Tr>
-                    ),
-                  )}
-                </Tbody>
-              </Table>
+                  <Stack
+                    spacing={1}
+                    background={useColorModeValue('gray.50', 'gray.800')}
+                    boxShadow="inset 0px 0px 10px rgba(0, 0, 0, 0.1)"
+                    maxHeight={150}
+                    overflow="auto"
+                  >
+                    {isEpcLoading
+                      ? Array.from({ length: 3 }).map((_, index) => (
+                        <Skeleton
+                          key={index}
+                          height="40px"
+                          isLoaded={isEpcLoading}
+                          flexShrink="0"
+                        >
+                          <Box>Loading...</Box>
+                        </Skeleton>
+                      ))
+                      : epcItems?.map((item) => (
+                        <ListItem
+                          key={item.EPC_UPRN}
+                          item={item}
+                          onClick={() => handleItemClick(item)}
+                          isSelected={
+                            item.EPC_UPRN === selectedItem?.EPC_UPRN
+                          }
+                        />
+                      ))}
+                  </Stack>
+                </Card>
+
+                {selectedItem && (
+                  <>
+                    <EPCCard item={selectedItem} />
+                    {attributes &&
+                      attributes.map((attribute, i) => (
+                        <Fragment key={i}>
+                          <TransportCard attribute={attribute} />
+                          <SchoolCard attribute={attribute} />
+                          <GreenSpaceAccessCard attribute={attribute} />
+                          <IMDCard attribute={attribute} />
+                        </Fragment>
+                      ))}
+                  </>
+                )}
+              </>
             )}
-          </Stack>
+          </DrawerBody>
+
+          {selectedItem && (
+            <>
+              <Box
+                paddingBlock={4}
+                paddingInline={8}
+                boxShadow="0px -4px 10px rgba(0, 0, 0, 0.1)"
+              >
+                <Button colorScheme="green" w="100%">
+                  See Predicted Price
+                </Button>
+              </Box>
+            </>
+          )}
         </DrawerContent>
       </Drawer>
-    </ChakraProvider>
+    </>
   );
 };
 

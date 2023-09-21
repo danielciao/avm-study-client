@@ -1,9 +1,11 @@
+export type EPCRating = 'A' | 'B' | 'C' | 'D' | 'E' | 'F' | 'G';
+
 export type EPCItem = {
   EPC_ADDRESS1: string;
   EPC_ADDRESS2: string;
   EPC_ADDRESS3: string;
   EPC_POSTCODE: string;
-  EPC_CURRENT_ENERGY_RATING: string;
+  EPC_CURRENT_ENERGY_RATING: EPCRating;
   EPC_PROPERTY_TYPE: string;
   EPC_BUILT_FORM: string;
   EPC_INSPECTION_DATE: number;
