@@ -274,25 +274,25 @@ export const App = () => {
                   >
                     {isEpcLoading
                       ? Array.from({ length: 3 }).map((_, index) => (
-                          <Skeleton
-                            key={index}
-                            height="40px"
-                            isLoaded={isEpcLoading}
-                            flexShrink="0"
-                          >
-                            <Box>Loading...</Box>
-                          </Skeleton>
-                        ))
+                        <Skeleton
+                          key={index}
+                          height="40px"
+                          isLoaded={isEpcLoading}
+                          flexShrink="0"
+                        >
+                          <Box>Loading...</Box>
+                        </Skeleton>
+                      ))
                       : epcItems?.map((item) => (
-                          <ListItem
-                            key={item.EPC_UPRN}
-                            item={item}
-                            onClick={() => handleItemClick(item)}
-                            isSelected={
-                              item.EPC_UPRN === selectedItem?.EPC_UPRN
-                            }
-                          />
-                        ))}
+                        <ListItem
+                          key={item.EPC_UPRN}
+                          item={item}
+                          onClick={() => handleItemClick(item)}
+                          isSelected={
+                            item.EPC_UPRN === selectedItem?.EPC_UPRN
+                          }
+                        />
+                      ))}
                   </Stack>
                 </Card>
 
@@ -340,6 +340,11 @@ const ListItem = (props: {
 }) => {
   const { item, onClick, isSelected } = props;
 
+  const color = useColorModeValue('gray.600', 'white')
+  const selectedColor = useColorModeValue('white', 'gray.800');
+  const selectedBackground = useColorModeValue('green.500', 'green.200');
+  const hoverBackground = useColorModeValue('gray.200', 'gray.700');
+
   return (
     <Skeleton isLoaded={!!item} fadeDuration={1} flexShrink="0" display="flex">
       <Box
@@ -354,13 +359,9 @@ const ListItem = (props: {
         border="none"
         fontSize={14}
         fontWeight={400}
-        backgroundColor={isSelected ? 'blue.100' : 'transparent'} // Selected state
-        _hover={{
-          backgroundColor: 'gray.200', // Hover state
-        }}
-        _focus={{
-          outline: 'none',
-        }}
+        color={isSelected ? selectedColor : color}
+        backgroundColor={isSelected ? selectedBackground : 'transparent'}
+        _hover={{ color, backgroundColor: hoverBackground }}
       >
         {item?.EPC_ADDRESS}
       </Box>
