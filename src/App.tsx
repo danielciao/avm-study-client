@@ -49,8 +49,12 @@ import { debounce } from './utils';
 
 const AnimatedCircleMarker = animated(CircleMarker);
 
-const { VITE_MAPBOX_USERNAME, VITE_MAPBOX_STYLE_ID, VITE_MAPBOX_ACCESS_TOKEN, VITE_API_BASE_URL } =
-  import.meta.env;
+const {
+  VITE_MAPBOX_USERNAME,
+  VITE_MAPBOX_STYLE_ID,
+  VITE_MAPBOX_ACCESS_TOKEN,
+  VITE_API_BASE_URL,
+} = import.meta.env;
 
 function LocationMarker(props: {
   location: LatLngLiteral | null;
@@ -215,6 +219,10 @@ export const App = () => {
                 fontSize={'xl'}
               >
                 London AVM Experiment
+                {VITE_MAPBOX_USERNAME}
+                {VITE_MAPBOX_STYLE_ID}
+                {VITE_MAPBOX_ACCESS_TOKEN}
+                {VITE_API_BASE_URL}
               </Text>
             </Box>
             <DrawerCloseButton position="absolute" top={4} right={4} />
@@ -274,25 +282,25 @@ export const App = () => {
                   >
                     {isEpcLoading
                       ? Array.from({ length: 3 }).map((_, index) => (
-                        <Skeleton
-                          key={index}
-                          height="40px"
-                          isLoaded={isEpcLoading}
-                          flexShrink="0"
-                        >
-                          <Box>Loading...</Box>
-                        </Skeleton>
-                      ))
+                          <Skeleton
+                            key={index}
+                            height="40px"
+                            isLoaded={isEpcLoading}
+                            flexShrink="0"
+                          >
+                            <Box>Loading...</Box>
+                          </Skeleton>
+                        ))
                       : epcItems?.map((item) => (
-                        <ListItem
-                          key={item.EPC_UPRN}
-                          item={item}
-                          onClick={() => handleItemClick(item)}
-                          isSelected={
-                            item.EPC_UPRN === selectedItem?.EPC_UPRN
-                          }
-                        />
-                      ))}
+                          <ListItem
+                            key={item.EPC_UPRN}
+                            item={item}
+                            onClick={() => handleItemClick(item)}
+                            isSelected={
+                              item.EPC_UPRN === selectedItem?.EPC_UPRN
+                            }
+                          />
+                        ))}
                   </Stack>
                 </Card>
 
@@ -361,11 +369,11 @@ const Predict: React.FC<{ item: EPCItem }> = (props) => {
       <Button colorScheme="green" w="100%" onClick={handleButtonClick}>
         {prediction != null
           ? `${prediction.toLocaleString('en-GB', {
-            style: 'currency',
-            currency: 'GBP',
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-          })}`
+              style: 'currency',
+              currency: 'GBP',
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2,
+            })}`
           : 'See Predicted Price'}
       </Button>
     </Box>
