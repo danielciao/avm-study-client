@@ -219,10 +219,6 @@ export const App = () => {
                 fontSize={'xl'}
               >
                 London AVM Experiment
-                {VITE_MAPBOX_USERNAME}
-                {VITE_MAPBOX_STYLE_ID}
-                {VITE_MAPBOX_ACCESS_TOKEN}
-                {VITE_API_BASE_URL}
               </Text>
             </Box>
             <DrawerCloseButton position="absolute" top={4} right={4} />
