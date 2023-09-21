@@ -314,33 +314,72 @@ export const App = () => {
             )}
           </DrawerBody>
 
-          {selectedItem && (
-            <>
-              <Box
-                paddingBlock={4}
-                paddingInline={8}
-                boxShadow="0px -4px 10px rgba(0, 0, 0, 0.1)"
-              >
-                <Button colorScheme="green" w="100%">
-                  See Predicted Price
-                </Button>
-              </Box>
-            </>
-          )}
+          {selectedItem && <Predict item={selectedItem} />}
         </DrawerContent>
       </Drawer>
     </>
   );
 };
 
-const ListItem = (props: {
+const Predict: React.FC<{ item: EPCItem }> = (props) => {
+  const { item } = props;
+  const [prediction, setPrediction] = useState<number | null>(null);
+
+  useEffect(() => {
+    setPrediction(null);
+  }, [item]);
+
+  const handleButtonClick = async () => {
+    try {
+      const response = await fetch('http://localhost:3001/predict', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          EPC_TOTAL_FLOOR_AREA: item.EPC_TOTAL_FLOOR_AREA,
+        }),
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        setPrediction(result.prediction);
+      } else {
+        console.error('Server responded with', response.status);
+      }
+    } catch (error) {
+      console.error('An error occurred:', error);
+    }
+  };
+
+  return (
+    <Box
+      paddingBlock={4}
+      paddingInline={8}
+      boxShadow="0px -4px 10px rgba(0, 0, 0, 0.1)"
+    >
+      <Button colorScheme="green" w="100%" onClick={handleButtonClick}>
+        {prediction != null
+          ? `${prediction.toLocaleString('en-GB', {
+            style: 'currency',
+            currency: 'GBP',
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+          })}`
+          : 'See Predicted Price'}
+      </Button>
+    </Box>
+  );
+};
+
+const ListItem: React.FC<{
   item: EPCItem;
-  onClick: () => void;
   isSelected: boolean;
-}) => {
+  onClick: () => void;
+}> = (props) => {
   const { item, onClick, isSelected } = props;
 
-  const color = useColorModeValue('gray.600', 'white')
+  const color = useColorModeValue('gray.600', 'white');
   const selectedColor = useColorModeValue('white', 'gray.800');
   const selectedBackground = useColorModeValue('green.500', 'green.200');
   const hoverBackground = useColorModeValue('gray.200', 'gray.700');
