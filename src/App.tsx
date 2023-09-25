@@ -22,7 +22,7 @@ import '@fontsource/open-sans/400.css';
 import '@fontsource/open-sans/700.css';
 import { LatLngLiteral } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Fragment, useEffect, useState } from 'react';
+import { Fragment, useEffect, useMemo, useState } from 'react';
 import { FaCog } from 'react-icons/fa';
 import {
   CircleMarker,
@@ -138,6 +138,8 @@ export const App = () => {
     [selectedItem],
   );
 
+  const sortedEpcItems = useMemo(() => epcItems?.sort(), [epcItems]);
+
   const handleItemClick = (item: EPCItem) => {
     setSelectedItem(item);
     // setLocation({
@@ -151,6 +153,82 @@ export const App = () => {
       setSelectedItem(null);
     }
   }, [epcItems]);
+
+  const startCard = (
+    <Card
+      image={
+        <Image
+          src={touchscreen}
+          alt="Touch to select location"
+          boxSize={116}
+          paddingBlockStart={4}
+          paddingInlineStart={4}
+        />
+      }
+      title="Start with your location"
+      label="Welcome!"
+    >
+      <Text color="gray.500">
+        Select a location on the map to view available addresses for prediction.{' '}
+        <strong>Click</strong> to drop a pin.
+        <strong>Left-click</strong> to remove the pin.
+      </Text>
+    </Card>
+  );
+
+  const cardStack = (
+    <>
+      <Card
+        image={<Image src={houses} alt="Image of London houses" width="100%" />}
+        label="Select an address"
+        paddingInline={3}
+        paddingBlockEnd={3}
+      >
+        <Stack
+          spacing={1}
+          background={useColorModeValue('gray.50', 'gray.800')}
+          boxShadow="inset 0px 0px 10px rgba(0, 0, 0, 0.1)"
+          maxHeight={150}
+          overflow="auto"
+        >
+          {isEpcLoading
+            ? Array.from({ length: 3 }).map((_, index) => (
+                <Skeleton
+                  key={index}
+                  height="40px"
+                  isLoaded={isEpcLoading}
+                  flexShrink="0"
+                >
+                  <Box>Loading...</Box>
+                </Skeleton>
+              ))
+            : sortedEpcItems?.map((item) => (
+                <ListItem
+                  key={item.EPC_UPRN}
+                  item={item}
+                  onClick={() => handleItemClick(item)}
+                  isSelected={item.EPC_UPRN === selectedItem?.EPC_UPRN}
+                />
+              ))}
+        </Stack>
+      </Card>
+
+      {selectedItem && (
+        <>
+          <EPCCard item={selectedItem} />
+          {attributes &&
+            attributes.map((attribute, i) => (
+              <Fragment key={i}>
+                <TransportCard attribute={attribute} />
+                <SchoolCard attribute={attribute} />
+                <GreenSpaceAccessCard attribute={attribute} />
+                <IMDCard attribute={attribute} />
+              </Fragment>
+            ))}
+        </>
+      )}
+    </>
+  );
 
   return (
     <>
@@ -234,99 +312,27 @@ export const App = () => {
           >
             <ThemeSwitcher />
           </Flex>
-          <DrawerBody flex="1" padding={0} paddingBlockStart={4}>
-            {location == null ? (
-              <Card
-                image={
-                  <Image
-                    src={touchscreen}
-                    alt="Touch to select location"
-                    boxSize={116}
-                    paddingBlockStart={4}
-                    paddingInlineStart={4}
-                  />
-                }
-                title="Start with your location"
-                label="Welcome!"
-              >
-                <Text color="gray.500">
-                  Select a location on the map to view available addresses for
-                  prediction. <strong>Click</strong> to drop a pin.
-                  <strong>Left-click</strong> to remove the pin.
-                </Text>
-              </Card>
-            ) : (
-              <>
-                <Card
-                  image={
-                    <Image
-                      src={houses}
-                      alt="Image of London houses"
-                      width="100%"
-                    />
-                  }
-                  label="Select an address"
-                  paddingInline={3}
-                  paddingBlockEnd={3}
-                >
-                  <Stack
-                    spacing={1}
-                    background={useColorModeValue('gray.50', 'gray.800')}
-                    boxShadow="inset 0px 0px 10px rgba(0, 0, 0, 0.1)"
-                    maxHeight={150}
-                    overflow="auto"
-                  >
-                    {isEpcLoading
-                      ? Array.from({ length: 3 }).map((_, index) => (
-                          <Skeleton
-                            key={index}
-                            height="40px"
-                            isLoaded={isEpcLoading}
-                            flexShrink="0"
-                          >
-                            <Box>Loading...</Box>
-                          </Skeleton>
-                        ))
-                      : epcItems?.map((item) => (
-                          <ListItem
-                            key={item.EPC_UPRN}
-                            item={item}
-                            onClick={() => handleItemClick(item)}
-                            isSelected={
-                              item.EPC_UPRN === selectedItem?.EPC_UPRN
-                            }
-                          />
-                        ))}
-                  </Stack>
-                </Card>
 
-                {selectedItem && (
-                  <>
-                    <EPCCard item={selectedItem} />
-                    {attributes &&
-                      attributes.map((attribute, i) => (
-                        <Fragment key={i}>
-                          <TransportCard attribute={attribute} />
-                          <SchoolCard attribute={attribute} />
-                          <GreenSpaceAccessCard attribute={attribute} />
-                          <IMDCard attribute={attribute} />
-                        </Fragment>
-                      ))}
-                  </>
-                )}
-              </>
-            )}
+          <DrawerBody flex="1" padding={0} paddingBlockStart={4}>
+            {location == null ? startCard : cardStack}
           </DrawerBody>
 
-          {selectedItem && <Predict item={selectedItem} />}
+          {selectedItem && (
+            <Predict item={selectedItem} attribute={attributes?.at(0)} />
+          )}
         </DrawerContent>
       </Drawer>
     </>
   );
 };
 
-const Predict: React.FC<{ item: EPCItem }> = (props) => {
-  const { item } = props;
+const convertBorough = (borough: string) =>
+  borough === 'Westminster' ? 'CITY OF WESTMINSTER' : borough.toUpperCase();
+
+const Predict: React.FC<{ item: EPCItem; attribute?: AreaAttribute }> = (
+  props,
+) => {
+  const { item, attribute } = props;
   const [prediction, setPrediction] = useState<number | null>(null);
 
   useEffect(() => {
@@ -334,15 +340,41 @@ const Predict: React.FC<{ item: EPCItem }> = (props) => {
   }, [item]);
 
   const handleButtonClick = async () => {
+    const today = new Date();
+    const buildingAge = today.getFullYear() - 1995;
+
+    const features = {
+      ...item,
+      ...attribute,
+
+      PPD_OldNew: false,
+      PPD_PropertyType: 'F',
+      PPD_Duration: 'L',
+      PPD_TransferDate: today.getTime(),
+      PPD_District: convertBorough(item.CPO_BOROUGH),
+      EPC_CONSTRUCTION_AGE: buildingAge,
+      EPC_FLOOR_LEVEL: 'low',
+
+      ENG_BathroomBedroomRatio: 0.5,
+      ENG_AreaPerRoom:
+        item.EPC_TOTAL_FLOOR_AREA / item.EPC_NUMBER_HABITABLE_ROOMS,
+
+      zoo_num_bed_min: 2,
+      zoo_num_bath_min: 2,
+      zoo_num_reception_min: 1,
+      zoo_duration: 60,
+      zoo_auction: false,
+      zoo_garage: false,
+      zoo_shared_ownership: false,
+    };
+
     try {
       const response = await fetch(`${VITE_API_BASE_URL}/predict`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({
-          EPC_TOTAL_FLOOR_AREA: item.EPC_TOTAL_FLOOR_AREA,
-        }),
+        body: JSON.stringify(features),
       });
 
       if (response.ok) {
