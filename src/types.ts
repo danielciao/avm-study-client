@@ -38,15 +38,15 @@ export type AreaAttribute = {
   NPT_NearbyTramMetroStops: number;
   NPT_NearbyRailStops: number;
   NPT_NearbyStops: number;
-  SCH_NearbyAcademies: number;
-  SCH_NearbyIndependentSchools: number;
-  SCH_NearbyNurserySchools: number;
-  SCH_NearbyPrimarySchools: number;
-  SCH_NearbySecondarySchools: number;
-  SCH_NearbyOutstandingSchools: number;
-  SCH_NearbyGoodSchools: number;
-  SCH_NearbyInadequateSchools: number;
-  SCH_NearbySchools: number;
+  SCH_ACAD: number;
+  SCH_IND: number;
+  SCH_NURSERY: number;
+  SCH_PRIMARY: number;
+  SCH_SECONDARY: number;
+  SCH_OUTSTANDING: number;
+  SCH_GOOD: number;
+  SCH_INADEQUATE: number;
+  SCH_ALL: number;
   PGN_MSOAName: string;
   PGN_HouseWithPOS: number;
   PGN_HouseTotalPOS: number;
@@ -72,4 +72,21 @@ export type AreaAttribute = {
   IMD_CrmDecile: number;
   IMD_HouseBarDecile: number;
   IMD_EnvDecile: number;
+};
+
+export type UserProvidedAttributes = {
+  PPD_OldNew: boolean;
+  PPD_PropertyType: string;
+  PPD_Duration: string;
+  PPD_TransferDate: number;
+  PPD_District: string;
+  EPC_CONSTRUCTION_AGE: number;
+  EPC_FLOOR_LEVEL: string;
+
+  zoo_num_bed_min: number;
+  zoo_num_bath_min: number;
+  zoo_num_reception_min: number;
+  zoo_auction: boolean;
+  zoo_garage: boolean;
+  zoo_shared_ownership: boolean;
 };

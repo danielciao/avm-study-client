@@ -1,8 +1,7 @@
 import { List, Text, useColorModeValue } from '@chakra-ui/react';
 import React from 'react';
+import { Attribute, Card } from '../components';
 import { EPCItem, EPCRating } from '../types';
-import { Attribute } from './Attribute';
-import { Card } from './Card';
 
 interface EPCCardProps {
   item: EPCItem;

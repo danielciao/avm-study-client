@@ -8,7 +8,7 @@ export const Attribute: React.FC<{ label: string; value: React.ReactNode }> = (
 
   return (
     <ListItem fontSize={14}>
-      <Text as="span" fontWeight="bold">
+      <Text as="span" fontWeight={700}>
         {label}:&nbsp;
       </Text>
       {value}

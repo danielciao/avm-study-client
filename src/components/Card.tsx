@@ -32,10 +32,13 @@ export const Card: React.FC<PropsWithChildren<CardProps>> = (props) => {
     paddingBlockEnd = paddingBlock,
   } = props;
 
+  const backgroundColor = useColorModeValue('white', 'gray.900');
+  const titleColor = useColorModeValue('gray.700', 'white');
+
   return (
     <Center paddingInline={4} marginBottom={4}>
       <Box
-        bg={useColorModeValue('white', 'gray.900')}
+        bg={backgroundColor}
         overflow="hidden"
         boxShadow="xl"
         rounded="md"
@@ -71,10 +74,7 @@ export const Card: React.FC<PropsWithChildren<CardProps>> = (props) => {
           )}
           {title && (
             <>
-              <Heading
-                color={useColorModeValue('gray.700', 'white')}
-                fontSize="2xl"
-              >
+              <Heading color={titleColor} fontSize="2xl">
                 {title}
               </Heading>
               <Divider />

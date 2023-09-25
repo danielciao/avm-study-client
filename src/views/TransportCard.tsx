@@ -1,9 +1,8 @@
 import { Image, List } from '@chakra-ui/react';
 import React from 'react';
 import bus from '../assets/bus.jpg';
+import { Attribute, Card } from '../components';
 import { AreaAttribute } from '../types';
-import { Attribute } from './Attribute';
-import { Card } from './Card';
 
 interface TransportCardProps {
   attribute: AreaAttribute;

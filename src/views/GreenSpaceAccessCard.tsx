@@ -1,9 +1,8 @@
 import { Image, List, Text } from '@chakra-ui/react';
 import React from 'react';
 import park from '../assets/park.jpg';
+import { Attribute, Card } from '../components';
 import { AreaAttribute } from '../types';
-import { Attribute } from './Attribute';
-import { Card } from './Card';
 
 interface GreenSpaceAccessCardProps {
   attribute: AreaAttribute;

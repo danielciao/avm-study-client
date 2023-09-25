@@ -1,21 +1,28 @@
 import { Image, List, Text, useColorModeValue } from '@chakra-ui/react';
 import React from 'react';
 import imd from '../assets/imd_2019.jpg';
+import { Attribute, Card } from '../components';
 import { AreaAttribute } from '../types';
-import { Attribute } from './Attribute';
-import { Card } from './Card';
 
 const RatingDisplay: React.FC<{ rating: number }> = ({ rating }) => {
   let color;
 
-  if (rating >= 9) {
-    color = useColorModeValue('green.500', 'green.300');
-  } else if (rating >= 6) {
-    color = useColorModeValue('yellow.500', 'yellow.300');
+  const veryHighRatingColor = useColorModeValue('green.400', 'green.400');
+  const highRatingColor = useColorModeValue('green.500', 'green.300');
+  const midRatingColour = useColorModeValue('yellow.500', 'yellow.300');
+  const lowRatingColour = useColorModeValue('orange.500', 'orange.300');
+  const veryLowRatingColour = useColorModeValue('red.500', 'red.300');
+
+  if (rating > 9) {
+    color = veryHighRatingColor;
+  } else if (rating >= 7) {
+    color = highRatingColor;
+  } else if (rating >= 5) {
+    color = midRatingColour;
   } else if (rating >= 3) {
-    color = useColorModeValue('orange.500', 'orange.300');
+    color = lowRatingColour;
   } else {
-    color = useColorModeValue('red.500', 'red.300');
+    color = veryLowRatingColour;
   }
 
   return (

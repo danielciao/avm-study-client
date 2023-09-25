@@ -1,6 +1,5 @@
 import {
   Box,
-  Button,
   Divider,
   Drawer,
   DrawerBody,
@@ -20,34 +19,36 @@ import {
 } from '@chakra-ui/react';
 import '@fontsource/open-sans/400.css';
 import '@fontsource/open-sans/700.css';
-import { LatLngLiteral } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { Fragment, useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo } from 'react';
 import { FaCog } from 'react-icons/fa';
-import {
-  CircleMarker,
-  MapContainer,
-  Marker,
-  Popup,
-  TileLayer,
-  useMapEvents,
-} from 'react-leaflet';
-import { animated, useSpring } from 'react-spring';
+import { MapContainer, TileLayer } from 'react-leaflet';
 import touchscreen from './assets/cursor-touchscreen.png';
 import houses from './assets/houses.jpg';
-import { Card } from './components/Card';
-import { EPCCard } from './components/EPCCard';
-import { GreenSpaceAccessCard } from './components/GreenSpaceAccessCard';
-import { IMDCard } from './components/IMDCard';
-import { SchoolCard } from './components/SchoolCard';
-import { ThemeSwitcher } from './components/ThemeSwitcher';
-import { TransportCard } from './components/TransportCard';
-import { useCurrentLocation } from './hooks/useCurrentLocation';
-import { useFetch } from './hooks/useFetch';
-import { AreaAttribute, EPCItem } from './types';
-import { debounce } from './utils';
-
-const AnimatedCircleMarker = animated(CircleMarker);
+import {
+  Card,
+  EPCListItem,
+  LocationMarker,
+  PredictButton,
+  ThemeSwitcher,
+} from './components';
+import {
+  INITIAL_MAP_ZOOM_LEVEL,
+  MAX_MAP_ZOOM_LEVEL,
+  MIN_MAP_ZOOM_LEVEL,
+  useCurrentLocation,
+  useFetch,
+} from './hooks';
+import { useAppDispatch, useAppState } from './state';
+import { EPCItem } from './types';
+import {
+  EPCCard,
+  GreenSpaceAccessCard,
+  IMDCard,
+  SchoolCard,
+  TransportCard,
+  UserInputCard,
+} from './views';
 
 const {
   VITE_MAPBOX_USERNAME,
@@ -56,70 +57,22 @@ const {
   VITE_API_BASE_URL,
 } = import.meta.env;
 
-function LocationMarker(props: {
-  location: LatLngLiteral | null;
-  setLocation: (location: LatLngLiteral | null) => void;
-}) {
-  const { location, setLocation } = props;
-
-  const [springProps, setSpringProps] = useSpring(() => ({
-    radius: 0,
-    config: { tension: 50, friction: 10 },
-  }));
-
-  const debouncedSetLocation = debounce((latlng: LatLngLiteral) => {
-    setLocation(latlng);
-  }, 250);
-
-  useEffect(() => {
-    if (location) {
-      setSpringProps({ radius: 0, immediate: true });
-      setSpringProps({ radius: 100, immediate: false });
-    } else {
-      setSpringProps({ radius: 0 });
-    }
-  }, [location, setSpringProps]);
-
-  const map = useMapEvents({
-    click(e) {
-      debouncedSetLocation(e.latlng);
-    },
-    contextmenu() {
-      setLocation(null);
-    },
-    locationfound(e) {
-      map.flyTo(e.latlng, map.getZoom());
-    },
-  });
-
-  return location === null ? null : (
-    <AnimatedCircleMarker
-      center={location}
-      pathOptions={{ color: 'green', weight: 0.5 }}
-      radius={springProps.radius}
-    >
-      <Marker position={location}>
-        <Popup>You are here</Popup>
-      </Marker>
-    </AnimatedCircleMarker>
-  );
-}
-
 export const App = () => {
   const currentPosition = useCurrentLocation();
   const { isOpen, onOpen, onClose } = useDisclosure();
   const [isLargerThan768] = useMediaQuery('(min-width: 768px)');
 
-  const [location, setLocation] = useState<LatLngLiteral | null>(null);
-  const [selectedItem, setSelectedItem] = useState<EPCItem | null>(null);
+  const { location, selectedItem } = useAppState();
+  const dispatch = useAppDispatch();
 
-  const tileAttribution = useColorModeValue(
-    'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
-    '&copy; <a href="https://www.mapbox.com/">Mapbox</a>',
-  );
-  const tileUrl = useColorModeValue(
+  const tileUrl = useColorModeValue<string, string>(
     'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',
     `https://api.mapbox.com/styles/v1/${VITE_MAPBOX_USERNAME}/${VITE_MAPBOX_STYLE_ID}/tiles/256/{z}/{x}/{y}@2x?access_token=${VITE_MAPBOX_ACCESS_TOKEN}`,
+  );
+
+  const tileAttribution = useColorModeValue<string, string>(
+    '&copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a>',
+    '&copy; <a href="https://www.mapbox.com/">Mapbox</a>',
   );
 
   const { data: epcItems, isLoading: isEpcLoading } = useFetch<Array<EPCItem>>(
@@ -129,30 +82,37 @@ export const App = () => {
     [location],
   );
 
-  const { data: attributes, isLoading: _isAttributeLoading } = useFetch<
-    Array<AreaAttribute>
-  >(
-    selectedItem
-      ? `${VITE_API_BASE_URL}/features?lat=${selectedItem.UPRN_LATITUDE}&lon=${selectedItem.UPRN_LONGITUDE}&top=1`
-      : null,
-    [selectedItem],
+  const sortedEpcItems = useMemo(
+    () => epcItems?.sort((a, b) => a.EPC_ADDRESS.localeCompare(b.EPC_ADDRESS)),
+    [epcItems],
   );
 
-  const sortedEpcItems = useMemo(() => epcItems?.sort(), [epcItems]);
+  const handleItemClick = async (item: EPCItem) => {
+    try {
+      const response = await fetch(
+        `${VITE_API_BASE_URL}/features?lat=${item.UPRN_LATITUDE}&lon=${item.UPRN_LONGITUDE}&top=1`,
+      );
 
-  const handleItemClick = (item: EPCItem) => {
-    setSelectedItem(item);
-    // setLocation({
-    //   lat: item.UPRN_LATITUDE, lng: item.UPRN_LONGITUDE
-    // });
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+
+      const [attributes] = await response.json();
+      dispatch({
+        type: 'UPDATE_SELECTED_ITEM',
+        payload: { ...item, ...attributes },
+      });
+    } catch (error: any) {
+      dispatch({ type: 'UPDATE_SELECTED_ITEM', payload: null });
+    }
   };
 
   useEffect(() => {
     if (epcItems && epcItems.length > 0) {
+      dispatch({ type: 'UPDATE_SELECTED_ITEM', payload: null });
       onOpen();
-      setSelectedItem(null);
     }
-  }, [epcItems]);
+  }, [dispatch, onOpen, epcItems]);
 
   const startCard = (
     <Card
@@ -203,7 +163,7 @@ export const App = () => {
                 </Skeleton>
               ))
             : sortedEpcItems?.map((item) => (
-                <ListItem
+                <EPCListItem
                   key={item.EPC_UPRN}
                   item={item}
                   onClick={() => handleItemClick(item)}
@@ -216,15 +176,11 @@ export const App = () => {
       {selectedItem && (
         <>
           <EPCCard item={selectedItem} />
-          {attributes &&
-            attributes.map((attribute, i) => (
-              <Fragment key={i}>
-                <TransportCard attribute={attribute} />
-                <SchoolCard attribute={attribute} />
-                <GreenSpaceAccessCard attribute={attribute} />
-                <IMDCard attribute={attribute} />
-              </Fragment>
-            ))}
+          <TransportCard attribute={selectedItem} />
+          <SchoolCard attribute={selectedItem} />
+          <GreenSpaceAccessCard attribute={selectedItem} />
+          <IMDCard attribute={selectedItem} />
+          <UserInputCard />
         </>
       )}
     </>
@@ -234,10 +190,11 @@ export const App = () => {
     <>
       <Box pos="relative" h="100vh" zIndex={0}>
         <MapContainer
-          center={location ?? currentPosition}
-          zoom={12}
           style={{ minHeight: '100vh', minWidth: '100vw' }}
-          maxZoom={20}
+          minZoom={MIN_MAP_ZOOM_LEVEL}
+          maxZoom={MAX_MAP_ZOOM_LEVEL}
+          zoom={INITIAL_MAP_ZOOM_LEVEL}
+          center={location ?? currentPosition}
           attributionControl
           zoomControl
           doubleClickZoom
@@ -246,7 +203,7 @@ export const App = () => {
           easeLinearity={0.35}
         >
           <TileLayer attribution={tileAttribution} url={tileUrl} />
-          <LocationMarker location={location} setLocation={setLocation} />
+          <LocationMarker>You are here!</LocationMarker>
         </MapContainer>
       </Box>
       <IconButton
@@ -317,129 +274,9 @@ export const App = () => {
             {location == null ? startCard : cardStack}
           </DrawerBody>
 
-          {selectedItem && (
-            <Predict item={selectedItem} attribute={attributes?.at(0)} />
-          )}
+          {selectedItem && <PredictButton />}
         </DrawerContent>
       </Drawer>
     </>
-  );
-};
-
-const convertBorough = (borough: string) =>
-  borough === 'Westminster' ? 'CITY OF WESTMINSTER' : borough.toUpperCase();
-
-const Predict: React.FC<{ item: EPCItem; attribute?: AreaAttribute }> = (
-  props,
-) => {
-  const { item, attribute } = props;
-  const [prediction, setPrediction] = useState<number | null>(null);
-
-  useEffect(() => {
-    setPrediction(null);
-  }, [item]);
-
-  const handleButtonClick = async () => {
-    const today = new Date();
-    const buildingAge = today.getFullYear() - 1995;
-
-    const features = {
-      ...item,
-      ...attribute,
-
-      PPD_OldNew: false,
-      PPD_PropertyType: 'F',
-      PPD_Duration: 'L',
-      PPD_TransferDate: today.getTime(),
-      PPD_District: convertBorough(item.CPO_BOROUGH),
-      EPC_CONSTRUCTION_AGE: buildingAge,
-      EPC_FLOOR_LEVEL: 'low',
-
-      ENG_BathroomBedroomRatio: 0.5,
-      ENG_AreaPerRoom:
-        item.EPC_TOTAL_FLOOR_AREA / item.EPC_NUMBER_HABITABLE_ROOMS,
-
-      zoo_num_bed_min: 2,
-      zoo_num_bath_min: 2,
-      zoo_num_reception_min: 1,
-      zoo_duration: 60,
-      zoo_auction: false,
-      zoo_garage: false,
-      zoo_shared_ownership: false,
-    };
-
-    try {
-      const response = await fetch(`${VITE_API_BASE_URL}/predict`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(features),
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        setPrediction(result.prediction);
-      } else {
-        console.error('Server responded with', response.status);
-      }
-    } catch (error) {
-      console.error('An error occurred:', error);
-    }
-  };
-
-  return (
-    <Box
-      paddingBlock={4}
-      paddingInline={8}
-      boxShadow="0px -4px 10px rgba(0, 0, 0, 0.1)"
-    >
-      <Button colorScheme="green" w="100%" onClick={handleButtonClick}>
-        {prediction != null
-          ? `${prediction.toLocaleString('en-GB', {
-              style: 'currency',
-              currency: 'GBP',
-              minimumFractionDigits: 2,
-              maximumFractionDigits: 2,
-            })}`
-          : 'See Predicted Price'}
-      </Button>
-    </Box>
-  );
-};
-
-const ListItem: React.FC<{
-  item: EPCItem;
-  isSelected: boolean;
-  onClick: () => void;
-}> = (props) => {
-  const { item, onClick, isSelected } = props;
-
-  const color = useColorModeValue('gray.600', 'white');
-  const selectedColor = useColorModeValue('white', 'gray.800');
-  const selectedBackground = useColorModeValue('green.500', 'green.200');
-  const hoverBackground = useColorModeValue('gray.200', 'gray.700');
-
-  return (
-    <Skeleton isLoaded={!!item} fadeDuration={1} flexShrink="0" display="flex">
-      <Box
-        as="button"
-        onClick={onClick}
-        height={9}
-        alignItems="center"
-        paddingInline={2}
-        flex={1}
-        textAlign="start"
-        borderRadius="none"
-        border="none"
-        fontSize={14}
-        fontWeight={400}
-        color={isSelected ? selectedColor : color}
-        backgroundColor={isSelected ? selectedBackground : 'transparent'}
-        _hover={{ color, backgroundColor: hoverBackground }}
-      >
-        {item?.EPC_ADDRESS}
-      </Box>
-    </Skeleton>
   );
 };
