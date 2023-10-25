@@ -82,6 +82,7 @@ export type UserProvidedAttributes = {
   PPD_District: string;
   EPC_CONSTRUCTION_AGE: number;
   EPC_FLOOR_LEVEL: string;
+  RATE_2Y_75BTL: number;
 
   zoo_num_bed_min: number;
   zoo_num_bath_min: number;
@@ -89,4 +90,10 @@ export type UserProvidedAttributes = {
   zoo_auction: boolean;
   zoo_garage: boolean;
   zoo_shared_ownership: boolean;
+};
+
+export type Prediction = {
+  prediction: number;
+  lower_bound: number;
+  upper_bound: number;
 };
